@@ -1,0 +1,62 @@
+name: 'app'
+type: 'php:7.2'
+
+build:
+    flavor: none
+
+dependencies:
+    nodejs:
+        yarn: "*"
+
+web:
+    locations:
+        '/':
+            root: 'www/public'
+            expires: 5m
+            passthru: '/index.php'
+            allow: false
+            rules:
+                '\.(jpe?g|png|gif|svgz?|css|js|map|ico|bmp|eot|woff2?|otf|ttf)$':
+                    allow: true
+                    expires: 2w
+
+disk: 512
+
+mounts:
+    '/data':
+        source: local
+        source_path: 'data'
+
+hooks:
+    build: |
+        set -e
+        mkdir -p www
+
+        cd www
+        ln -s ../data/data data
+        cd ..
+
+        mv grocy/public www
+        mv grocy/controllers www
+        mv grocy/helpers www
+        mv grocy/localization www
+        mv grocy/middleware www
+        mv grocy/migrations www
+        mv grocy/publication_assets www
+        mv grocy/services www
+        mv grocy/views www
+        mv grocy/composer.* www
+        mv grocy/.yarnrc www
+        mv grocy/yarn.* www
+        mv grocy/*.php www
+        mv grocy/*.json www
+
+        cd www
+        composer install
+        yarn install
+
+    deploy: |
+        set -e
+        mkdir -p data/data/viewcache
+        cp -rp grocy/data/* data/data
+        cp config.php data/data
